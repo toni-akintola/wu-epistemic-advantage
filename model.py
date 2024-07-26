@@ -20,6 +20,7 @@ def constructModel() -> AgentModel:
                 else "marginalized"
             ),
         }
+        return initial_data
 
     def generateTimestepData(model: AgentModel):
         graph = model.get_graph()
@@ -101,3 +102,7 @@ def constructModel() -> AgentModel:
     model.set_timestep_function(generateTimestepData)
 
     return model
+
+
+model = constructModel()
+model.initialize_graph()
