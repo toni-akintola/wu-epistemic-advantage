@@ -92,7 +92,7 @@ def constructModel() -> AgentModel:
     model.update_parameters(
         {
             "num_agents": 3,
-            "proportion_marginalized": float(1 / 6),
+            "proportion_marginalized": round(float(1 / 6), 2),
             "num_pulls": 1,
             "objective_b": 0.51,
         }
@@ -102,7 +102,3 @@ def constructModel() -> AgentModel:
     model.set_timestep_function(generateTimestepData)
 
     return model
-
-
-model = constructModel()
-model.initialize_graph()
