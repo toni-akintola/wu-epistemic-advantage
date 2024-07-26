@@ -16,7 +16,7 @@ def constructModel() -> AgentModel:
             # population type, 'marginalized' or 'dominant'
             "type": (
                 "dominant"
-                if random.random() > model.proportion_marginalized
+                if random.random() > model["proportion_marginalized"]
                 else "marginalized"
             ),
         }
