@@ -224,8 +224,6 @@ def constructModel() -> AgentModel:
         "degree_devaluation": 0.2,
     }
 
-    v2_params = v1_params.copy()  # v2 uses same parameters as v1
-
     # Set model variation parameter (default to "base")
     model["model_variation"] = "base"
 
@@ -235,6 +233,7 @@ def constructModel() -> AgentModel:
     else:
         model.update_parameters(v1_params)
 
+    model["variations"] = ["base", "v1", "v2"]
     model.set_initial_data_function(generateInitialData)
     model.set_timestep_function(generateTimestepData)
 
