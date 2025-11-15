@@ -4,8 +4,6 @@ A bandit model by Professor [Jingyi Wu](https://www.jingyiwu.org/) that depicts 
 ## Abstract
 > I use network models to simulate social learning situations in which the dominant group ignores or devalues testimony from the marginalized group. I find that the marginalized group ends up with several epistemic advantages due to testimonial ignoration and devaluation. The results provide one possible explanation for a key claim of standpoint epistemology, the inversion thesis, by casting it as a consequence of another key claim of the theory, the unidirectional failure of testimonial reciprocity. Moreover, the results complicate the understanding and application of previously discovered network epistemology effects, notably the Zollman effect.
 
-## Model Details
-Implemented here is Wu's base model with a complete network structure.
 
 ### Base model
 Marginalized agents update on evidence from all their neighbors, but dominant agents only update on evidence shared by in-group neighbors.
@@ -17,7 +15,7 @@ Marginalized agents update on evidence from all their neighbors, but dominant ag
 
 ### Variation 1: Homophilic networks
 Only difference from the base model is the network structure, where agents exhibit a preference to connect with in-group members over out-group members.
-* Size of network (18)
+* Size of network (20)
 * Number of pulls per round (1, 5, 10, 20)
 * Probability of B (0.51, 0.55, 0.6, 0.7, 0.8)
 * Proportion of marginalized group (1/6)

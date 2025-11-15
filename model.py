@@ -215,7 +215,7 @@ def constructModel() -> AgentModel:
     }
 
     v1_params = {
-        "num_nodes": 40,
+        "num_nodes": 20,
         "proportion_marginalized": float(1 / 6),
         "num_pulls": 1,
         "objective_b": 0.51,
