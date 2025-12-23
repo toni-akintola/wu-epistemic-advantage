@@ -209,6 +209,7 @@ def constructModel() -> AgentModel:
 
     # Define parameters based on model variation
     base_params = {
+        "num_nodes": 10,
         "proportion_marginalized": round(float(1 / 6), 2),
         "num_pulls": 1,
         "objective_b": 0.51,
