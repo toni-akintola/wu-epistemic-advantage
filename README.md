@@ -40,3 +40,5 @@ Simulates testimonial devaluation using Jeffrey conditionalization. Differs from
 - Proportion of marginalized group in population (1/6, 1/3, 1/2, 2/3)
 - Degree of devaluation(0.2, 0.5, 0.8)
 - Network structure: complete
+
+**Note**: The objective probability of arm A is set to 0.5.

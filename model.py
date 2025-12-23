@@ -72,7 +72,7 @@ def generateTimestepData(model: AgentModel):
     def calculate_posterior_v1(
         prior_belief: float, num_evidence: float, devalue=False
     ) -> float:
-        # Calculate likelihood, will be either the success rate
+        # Calculate likelihood
         pEH_likelihood = (model["objective_b"] ** num_evidence) * (
             (1 - model["objective_b"]) ** (model["num_pulls"] - num_evidence)
         )
