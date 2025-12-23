@@ -1,6 +1,6 @@
 # Epistemic Advantage on the Margin: A Network Standpoint Epistemology
 
-A bandit model by Professor [Jingyi Wu](https://www.jingyiwu.org/) that depicts the emergence of several epistemic advantages for marginalized groups due to testimonial ignoration and devaluation. View the full paper [here](http://doi.org/10.1111/phpr.12895).
+A bandit model by [Jingyi Wu](https://www.jingyiwu.org/) that depicts the emergence of several epistemic advantages for marginalized groups due to testimonial ignoration and devaluation. View the full paper [here](http://doi.org/10.1111/phpr.12895).
 
 ## Abstract
 
