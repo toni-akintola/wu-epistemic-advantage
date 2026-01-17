@@ -7,7 +7,7 @@ from emergent.main import AgentModel
 def generateInitialData(model: AgentModel):
     if model["model_variation"] == "base":
         return {
-            "a_success_rate": 0.5,
+            "a_success_rate": model["objective_a"],
             "b_success_rate": random.uniform(0.01, 0.99),
             "b_evidence": None,
             "type": (
@@ -16,9 +16,9 @@ def generateInitialData(model: AgentModel):
                 else "marginalized"
             ),
         }
-    elif model["model_variation"] == "v1":
+    elif model["model_variation"] == "homophily":
         return {
-            "a_superior": 0.5,
+            "a_superior": model["objective_a"],
             "b_superior": random.uniform(0.01, 0.99),
             "b_evidence": None,
             "type": (
@@ -27,7 +27,7 @@ def generateInitialData(model: AgentModel):
                 else "marginalized"
             ),
         }
-    else:  # v2
+    else:  # devaluation
         graph = model.get_graph()
         num_dominants = sum(
             (
@@ -37,7 +37,7 @@ def generateInitialData(model: AgentModel):
             )
         )
         return {
-            "a_superior": 0.5,
+            "a_superior": model["objective_a"],
             "b_superior": random.uniform(0.01, 0.99),
             "b_evidence": None,
             "type": (
@@ -69,7 +69,7 @@ def generateTimestepData(model: AgentModel):
 
         return posterior
 
-    def calculate_posterior_v1(
+    def calculate_posterior_homophily(
         prior_belief: float, num_evidence: float, devalue=False
     ) -> float:
         # Calculate likelihood
@@ -92,7 +92,7 @@ def generateTimestepData(model: AgentModel):
 
         return posterior
 
-    def calculate_posterior_v2(
+    def calculate_posterior_devaluation(
         prior_belief: float, num_evidence: float, devalue=False
     ) -> float:
         # Calculate likelihood P(E|H)
@@ -141,7 +141,7 @@ def generateTimestepData(model: AgentModel):
                         model["num_pulls"], model["objective_b"], size=None
                     )
                 )
-        else:  # v1 and v2
+        else:  # homophily and devaluation
             if node_data["a_superior"] > node_data["b_superior"]:
                 node_data["b_evidence"] = None
             else:
@@ -161,8 +161,8 @@ def generateTimestepData(model: AgentModel):
                 node_data["b_success_rate"] = calculate_posterior_base(
                     node_data["b_success_rate"], node_data["b_evidence"]
                 )
-            else:  # v1 and v2
-                node_data["b_superior"] = calculate_posterior_v1(
+            else:  # homophily and devaluation
+                node_data["b_superior"] = calculate_posterior_homophily(
                     node_data["b_superior"], node_data["b_evidence"]
                 )
 
@@ -181,23 +181,23 @@ def generateTimestepData(model: AgentModel):
                         node_data["b_success_rate"] = calculate_posterior_base(
                             node_data["b_success_rate"], neighbor_evidence
                         )
-                elif model["model_variation"] == "v1":
-                    # V1 model: marginalized agents update from all, dominant only from dominant
+                elif model["model_variation"] == "homophily":
+                    # homophily model: marginalized agents update from all, dominant only from dominant
                     if (
                         node_data["type"] == "marginalized"
                         or neighbor_type != "marginalized"
                     ):
-                        node_data["b_superior"] = calculate_posterior_v1(
+                        node_data["b_superior"] = calculate_posterior_homophily(
                             node_data["b_superior"], neighbor_evidence
                         )
-                else:  # v2
-                    # V2 model: marginalized agents update from all, dominant agents devalue evidence
+                else:  # devaluation
+                    # devaluation model: marginalized agents update from all, dominant agents devalue evidence
                     if node_data["type"] == "marginalized":
-                        node_data["b_superior"] = calculate_posterior_v2(
+                        node_data["b_superior"] = calculate_posterior_devaluation(
                             node_data["b_superior"], neighbor_evidence
                         )
                     else:
-                        node_data["b_superior"] = calculate_posterior_v2(
+                        node_data["b_superior"] = calculate_posterior_devaluation(
                             node_data["b_superior"], neighbor_evidence, devalue=True
                         )
 
@@ -209,17 +209,19 @@ def constructModel() -> AgentModel:
 
     # Define parameters based on model variation
     base_params = {
-        "num_nodes": 10,
+        "num_nodes": 20,
         "proportion_marginalized": round(float(1 / 6), 2),
         "num_pulls": 1,
         "objective_b": 0.51,
+        "objective_a": 0.5,
     }
 
-    v1_params = {
+    homophily_params = {
         "num_nodes": 20,
         "proportion_marginalized": float(1 / 6),
         "num_pulls": 1,
         "objective_b": 0.51,
+        "objective_a": 0.5,
         "p_ingroup": 0.7,
         "p_outgroup": 0.3,
         "degree_devaluation": 0.2,
@@ -232,9 +234,9 @@ def constructModel() -> AgentModel:
     if model["model_variation"] == "base":
         model.update_parameters(base_params)
     else:
-        model.update_parameters(v1_params)
+        model.update_parameters(homophily_params)
 
-    model["variations"] = ["base", "v1", "v2"]
+    model["variations"] = ["base", "homophily", "devaluation"]
     model.set_initial_data_function(generateInitialData)
     model.set_timestep_function(generateTimestepData)
 
