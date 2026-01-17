@@ -8,7 +8,7 @@ def generateInitialData(model: AgentModel):
     if model["model_variation"] == "base":
         return {
             "a_success_rate": model["objective_a"],
-            "b_success_rate": random.uniform(0.01, 0.99),
+            "b_superior": random.uniform(0.01, 0.99),
             "b_evidence": None,
             "type": (
                 "dominant"
@@ -133,7 +133,7 @@ def generateTimestepData(model: AgentModel):
     for _node, node_data in graph.nodes(data=True):
         # Determine which arm to pull based on model variation
         if model["model_variation"] == "base":
-            if node_data["a_success_rate"] > node_data["b_success_rate"]:
+            if node_data["a_success_rate"] > node_data["b_superior"]:
                 node_data["b_evidence"] = None
             else:
                 node_data["b_evidence"] = int(
@@ -158,8 +158,8 @@ def generateTimestepData(model: AgentModel):
         # Update belief based on own evidence
         if node_data["b_evidence"] is not None:
             if model["model_variation"] == "base":
-                node_data["b_success_rate"] = calculate_posterior_base(
-                    node_data["b_success_rate"], node_data["b_evidence"]
+                node_data["b_superior"] = calculate_posterior_base(
+                    node_data["b_superior"], node_data["b_evidence"]
                 )
             else:  # homophily and devaluation
                 node_data["b_superior"] = calculate_posterior_homophily(
@@ -178,8 +178,8 @@ def generateTimestepData(model: AgentModel):
                         node_data["type"] == "marginalized"
                         or neighbor_type != "marginalized"
                     ):
-                        node_data["b_success_rate"] = calculate_posterior_base(
-                            node_data["b_success_rate"], neighbor_evidence
+                        node_data["b_superior"] = calculate_posterior_base(
+                            node_data["b_superior"], neighbor_evidence
                         )
                 elif model["model_variation"] == "homophily":
                     # homophily model: marginalized agents update from all, dominant only from dominant
