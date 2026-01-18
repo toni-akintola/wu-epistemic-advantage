@@ -4,6 +4,52 @@ import random
 from emergent.main import AgentModel
 
 
+def generateHomophilicGraph(model: AgentModel) -> None:
+    """
+    Regenerate the graph structure to be homophilic, where agents connect with 
+    higher probability to agents of the same type (ingroup) than to agents of 
+    different types (outgroup).
+    
+    This function modifies the existing graph in-place by removing all edges
+    and regenerating them based on homophily probabilities.
+    
+    Args:
+        model: The AgentModel instance
+    """
+    graph = model.get_graph()
+    p_ingroup = model.get("p_ingroup", 0.7)
+    p_outgroup = model.get("p_outgroup", 0.3)
+    
+    # Remove all existing edges
+    graph.remove_edges_from(list(graph.edges()))
+    
+    # Generate new edges based on homophily
+    nodes = list(graph.nodes())
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            node_i = nodes[i]
+            node_j = nodes[j]
+            
+            # Get agent types
+            i_type = graph.nodes[node_i].get("type")
+            j_type = graph.nodes[node_j].get("type")
+            
+            # Determine connection probability based on whether types match
+            if i_type == j_type:
+                # Same type: use ingroup probability
+                p_connect = p_ingroup
+            else:
+                # Different types: use outgroup probability
+                p_connect = p_outgroup
+            
+            # Add edge with the determined probability
+            if random.random() < p_connect:
+                graph.add_edge(node_i, node_j)
+    
+    # Update the model with the modified graph
+    model.set_graph(graph)
+
+
 def generateInitialData(model: AgentModel):
     if model["model_variation"] == "base":
         return {
@@ -128,6 +174,16 @@ def generateTimestepData(model: AgentModel):
         return posterior
 
     graph = model.get_graph()
+    
+    # Regenerate graph structure for homophily variation if needed
+    # This should happen once after initial data is set up
+    if model["model_variation"] == "homophily":
+        # Check if homophilic graph has been initialized
+        # Use a flag stored in the model to track this
+        if not model.get("_homophilic_graph_initialized", False):
+            generateHomophilicGraph(model)
+            model["_homophilic_graph_initialized"] = True
+            graph = model.get_graph()
 
     # Run the experiments in all the nodes
     for _node, node_data in graph.nodes(data=True):
@@ -221,9 +277,19 @@ def constructModel() -> AgentModel:
         "proportion_marginalized": float(1 / 6),
         "num_pulls": 1,
         "objective_b": 0.51,
+        "graph_type": "custom",
         "objective_a": 0.5,
         "p_ingroup": 0.7,
         "p_outgroup": 0.3,
+        "degree_devaluation": 0.2,
+    }
+
+    devaluation_params = {
+        "num_nodes": 20,
+        "proportion_marginalized": float(1 / 6),
+        "num_pulls": 1,
+        "objective_b": 0.51,
+        "objective_a": 0.5,
         "degree_devaluation": 0.2,
     }
 
@@ -233,9 +299,11 @@ def constructModel() -> AgentModel:
     # Update parameters based on model variation
     if model["model_variation"] == "base":
         model.update_parameters(base_params)
-    else:
+    elif model["model_variation"] == "homophily":
         model.update_parameters(homophily_params)
-
+    else:  # devaluation
+        model.update_parameters(devaluation_params)
+    
     model["variations"] = ["base", "homophily", "devaluation"]
     model.set_initial_data_function(generateInitialData)
     model.set_timestep_function(generateTimestepData)
