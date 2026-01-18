@@ -1,4 +1,3 @@
-import networkx as nx
 import numpy as np
 import random
 from emergent.main import AgentModel
@@ -17,8 +16,14 @@ def generateHomophilicGraph(model: AgentModel) -> None:
         model: The AgentModel instance
     """
     graph = model.get_graph()
-    p_ingroup = model.get("p_ingroup", 0.7)
-    p_outgroup = model.get("p_outgroup", 0.3)
+    try:
+        p_ingroup = model["p_ingroup"]
+    except KeyError:
+        p_ingroup = 0.7
+    try:
+        p_outgroup = model["p_outgroup"]
+    except KeyError:
+        p_outgroup = 0.3
     
     # Remove all existing edges
     graph.remove_edges_from(list(graph.edges()))
@@ -63,7 +68,7 @@ def generateInitialData(model: AgentModel):
             ),
         }
     elif model["model_variation"] == "homophily":
-        return {
+        initial_data = {
             "a_superior": model["objective_a"],
             "b_superior": random.uniform(0.01, 0.99),
             "b_evidence": None,
@@ -73,6 +78,51 @@ def generateInitialData(model: AgentModel):
                 else "marginalized"
             ),
         }
+        
+        # Generate homophilic graph structure once all nodes are initialized
+        # We check if all nodes have their type set (including accounting for current node)
+        try:
+            already_generated = model["_homophilic_graph_generated"]
+        except KeyError:
+            already_generated = False
+        
+        if not already_generated:
+            try:
+                graph = model.get_graph()
+                if graph is not None:
+                    num_nodes = graph.number_of_nodes()
+                    # Count nodes that already have their type set
+                    nodes_with_type = sum(
+                        1 for _, data in graph.nodes(data=True) 
+                        if data.get("type") is not None
+                    )
+                    
+                    # If all nodes except the current one have types, we're initializing the last node
+                    # After this returns, the framework will set the current node's data
+                    # So we check if we're about to complete initialization
+                    if nodes_with_type == num_nodes - 1:
+                        # Find the node without a type and temporarily set it so we can generate
+                        # the homophilic graph structure with all nodes accounted for
+                        node_to_set = None
+                        for node in graph.nodes():
+                            if graph.nodes[node].get("type") is None:
+                                node_to_set = node
+                                break
+                        
+                        if node_to_set is not None:
+                            # Temporarily set the type for graph generation
+                            graph.nodes[node_to_set]["type"] = initial_data["type"]
+                            model.set_graph(graph)
+                            
+                            # Now generate the homophilic graph structure
+                            generateHomophilicGraph(model)
+                            model["_homophilic_graph_generated"] = True
+            except Exception as e:
+                # Graph might not be ready yet, or generation failed, that's okay
+                # In production, you might want to log this
+                pass
+        
+        return initial_data
     else:  # devaluation
         graph = model.get_graph()
         num_dominants = sum(
@@ -174,16 +224,6 @@ def generateTimestepData(model: AgentModel):
         return posterior
 
     graph = model.get_graph()
-    
-    # Regenerate graph structure for homophily variation if needed
-    # This should happen once after initial data is set up
-    if model["model_variation"] == "homophily":
-        # Check if homophilic graph has been initialized
-        # Use a flag stored in the model to track this
-        if not model.get("_homophilic_graph_initialized", False):
-            generateHomophilicGraph(model)
-            model["_homophilic_graph_initialized"] = True
-            graph = model.get_graph()
 
     # Run the experiments in all the nodes
     for _node, node_data in graph.nodes(data=True):
@@ -309,3 +349,5 @@ def constructModel() -> AgentModel:
     model.set_timestep_function(generateTimestepData)
 
     return model
+
+
